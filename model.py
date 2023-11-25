@@ -238,6 +238,18 @@ class Transformer(nn.Module):
         # Initialize attribute for the loss of the last forward call. This will be set if the forward is called with a targets tensor.
         self.last_loss = None
 
+    def get_num_params(self, non_embedding=True):
+        """
+        Return the number of parameters in the model.
+        For non-embedding count (default), the token embeddings can be subtracted.
+        Adjusted to the structure of the Transformer class.
+        """
+        n_params = sum(p.numel() for p in self.parameters())
+        if non_embedding:
+            # If you decide to subtract the token embeddings similar to position embeddings
+            n_params -= self.tok_embeddings.weight.numel()
+        return n_params
+
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
@@ -341,3 +353,12 @@ class Transformer(nn.Module):
             idx = torch.cat((idx, idx_next), dim=1)
 
         return idx
+
+model_args = ModelArgs()
+model = Transformer(model_args)
+
+# Step 2: Call the method
+num_params = model.get_num_params(non_embedding=True)  # or False, depending on your preference
+
+# Step 3: Print the result
+print(f"Total number of parameters in the model: {num_params}")
